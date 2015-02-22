@@ -1,25 +1,24 @@
-simple is small-step semantics research project
+simple is small-step semantics research project  
+on common lisp  
+debug or check on [CLISP](http://www.clisp.org/)  
+for studying computer programming semantics  
+and CLOS  
 
-on common lisp
+impliments are:  
+integer number  
+adder  
+multipler  
+boolean  
+lessthan  
+variable (and environment)  
 
-debug or check on CLISP
+executable example:  
+1 * 2 + 3 * 4  
+1 + 2 < 6  
+x + y  
 
-for studying computer programming semantics
+about simple:  
+Simple IMPerative LanguagE  
 
-impliments are:
-integer number
-adder
-multipler
-boolean
-lessthan
-variable
-
-executable example:
-1 * 2 + 3 * 4
-1 + 2 < 6
-x + y
-
-about simple:
-Simple IMPerative LanguagE
-
-quotation:Understanding Computation (published O'REILLY)
+quotation:  
+[Understanding Computation (published O'REILLY)](http://www.oreilly.co.jp/books/9784873116976/)  

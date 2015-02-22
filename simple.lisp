@@ -43,6 +43,13 @@
 (defmethod reduciblep ((x Svariable)) t)
 (defmethod myreduce ((x Svariable) env) (cdr (assoc (variable-name x) env)))
 
+
+(defclass Sdonothing () (()))
+(defmethod to_s ((x Sdonothing)) "do-nothing")
+(defmethod reduciblep ((x Sdonothing)) nil)
+(defmethod myreduce ((x Sdonothing)) x)
+
+
 (defclass Machine () ((expression :accessor machine-expression :initarg :expression)
 					  (environment :accessor machine-environment :initarg :environment)))
 (defmethod run ((m Machine))
