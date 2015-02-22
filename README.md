@@ -12,10 +12,12 @@ adder
 multipler
 boolean
 lessthan
+variable
 
 executable example:
 1 * 2 + 3 * 4
 1 + 2 < 6
+x + y
 
 about simple:
 Simple IMPerative LanguagE
