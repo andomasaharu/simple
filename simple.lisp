@@ -18,7 +18,7 @@
 
 (defun make-mul (l r) (make-instance 'Smultiply :left l :right r))
 (defclass Smultiply () ((left :accessor multiply-left :initarg :left)
-					 (right :accessor multiply-right :initarg :right)))
+						(right :accessor multiply-right :initarg :right)))
 (defmethod to_s ((x Smultiply)) (format nil "~A * ~A" (to_s (multiply-left x)) (to_s (multiply-right x))))
 (defmethod reduciblep ((x Smultiply)) t)
 (defmethod myreduce ((x Smultiply) env) (cond ((reduciblep (multiply-left x)) (make-mul (myreduce (multiply-left x) env) (multiply-right x)))
@@ -39,8 +39,8 @@
 (defmethod to_s ((x Slessthan)) (format nil "~A < ~A" (to_s (lessthan-left x)) (to_s (lessthan-right x))))
 (defmethod reduciblep ((x Slessthan)) t)
 (defmethod myreduce ((x Slessthan) env) (cond ((reduciblep (lessthan-left x)) (make-lt (myreduce (lessthan-left x) env) (lessthan-right x)))
-										  ((reduciblep (lessthan-right x)) (make-lt (lessthan-left x) (myreduce (lessthan-right x) env)))
-										  (t (make-bool (< (myreduce (lessthan-left x) env) (myreduce (lessthan-right x) env))))))
+											  ((reduciblep (lessthan-right x)) (make-lt (lessthan-left x) (myreduce (lessthan-right x) env)))
+											  (t (make-bool (< (myreduce (lessthan-left x) env) (myreduce (lessthan-right x) env))))))
 
 
 (defun make-var (a) (make-instance 'Svariable :aname a))
