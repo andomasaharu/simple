@@ -47,7 +47,7 @@
 (defclass Sdonothing () (()))
 (defmethod to_s ((x Sdonothing)) "do-nothing")
 (defmethod reduciblep ((x Sdonothing)) nil)
-(defmethod myreduce ((x Sdonothing)) x)
+(defmethod myreduce ((x Sdonothing) env) x)
 
 
 (defclass Machine () ((expression :accessor machine-expression :initarg :expression)
