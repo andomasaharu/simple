@@ -6,6 +6,15 @@ debug on CLISP
 
 for studying computer programming semantics
 
+impliments are:
+integer number
+adder
+multipler
+
+
+example:
+executable 1 * 2 + 3 * 4
+
 
 about simple:
 Simple IMPerative LanguagE
