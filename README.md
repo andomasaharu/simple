@@ -23,12 +23,14 @@ boolean
 lessthan  
 variable (and environment)  
 statement (assign)
+if then else
 
 executable example:  
 1 * 2 + 3 * 4  
 1 + 2 < 6  
 x + y  
 x = x + 1  
+if 1 < 1 then y = 1 else y = 2
 
 about simple:  
 Simple IMPerative LanguagE  
