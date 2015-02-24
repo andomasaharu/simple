@@ -1,5 +1,5 @@
 simple is small-step semantics research project  
-on common lisp  
+on Common Lisp  
 debug or check on [CLISP](http://www.clisp.org/)  
 for studying computer programming semantics  
 and CLOS  
@@ -14,6 +14,7 @@ save input action afford
 save electricity  
 finally ecology for earth  
 save the human(specially programmer)  
+oh, yeah Common Lisp  
 
 impliments are:  
 integer number  
@@ -24,6 +25,7 @@ lessthan
 variable (and environment)  
 statement (assign)
 if then else
+sequence
 
 executable example:  
 1 * 2 + 3 * 4  
@@ -31,6 +33,7 @@ executable example:
 x + y  
 x = x + 1  
 if 1 < 1 then y = 1 else y = 2
+x = 1 + 1; y = x + 2
 
 about simple:  
 Simple IMPerative LanguagE  
