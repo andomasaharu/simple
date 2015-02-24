@@ -22,8 +22,8 @@
 (defmethod to_s ((x Smultiply)) (format nil "~A * ~A" (to_s (multiply-left x)) (to_s (multiply-right x))))
 (defmethod reduciblep ((x Smultiply)) t)
 (defmethod myreduce ((x Smultiply) env) (cond ((reduciblep (multiply-left x)) (make-mul (myreduce (multiply-left x) env) (multiply-right x)))
-										((reduciblep (multiply-right x)) (make-mul (multiply-left x) (myreduce (multiply-right x) env)))
-										(t (make-num (* (myreduce (multiply-left x) env) (myreduce (multiply-right x) env))))))
+											  ((reduciblep (multiply-right x)) (make-mul (multiply-left x) (myreduce (multiply-right x) env)))
+											  (t (make-num (* (myreduce (multiply-left x) env) (myreduce (multiply-right x) env))))))
 
 
 (defun make-bool (a) (make-instance 'Sboolean :value a))
@@ -66,7 +66,7 @@
 (defmethod reduciblep ((x Sassign)) t)
 (defmethod myreduce ((x Sassign) env) (if (reduciblep (assign-expression x))
 										(make-assign (assign-name x) (myreduce (assign-expression x) env))
-										(cons (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
+										(values (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
 
 
 (defun make-if (cnd cns alt) (make-instance 'Sif :condition cnd :consequence cns :alternative alt))
@@ -82,18 +82,30 @@
 									  (myreduce (if-alternative x) env))))
 
 
+(defun make-seq (f s) (make-instance 'Ssequence :fst f :snd s))
+(defclass Ssequence () ((fst :accessor sequence-fst :initarg :fst)
+						 (snd :accessor sequence-snd :initarg :snd)))
+(defmethod to_s ((x Ssequence)) (format nil "~A; ~A" (to_s (sequence-fst x)) (to_s (sequence-snd x))))
+(defmethod reduciblep ((x Ssequence)) t)
+(defmethod myreduce ((x Ssequence) env) (if (donothingp (sequence-fst x))
+										  (values (sequence-snd x) env)
+										  (multiple-value-bind (rf re) (myreduce (sequence-fst x) env)
+											(values (make-seq rf (sequence-snd x)) re))))
+
+
 (defun make-machine (expr env) (make-instance 'Machine :expression expr :environment env))
 (defclass Machine () ((expression :accessor machine-expression :initarg :expression)
 					  (environment :accessor machine-environment :initarg :environment)))
 (defmethod run ((m Machine))
-  (labels ((rec (step)
+  (labels ((rec (step env)
 				(myinspect step)
 				(when (reduciblep step)
-				  (let ((r (myreduce step (machine-environment m))))
-					  (rec r))
-				  )))
-	(format t "start ~%")
-	(rec (machine-expression m))))
+				  (multiple-value-bind (r renv) (myreduce step env)
+					(if renv
+					  (rec r renv)
+					  (rec r env))))))
+	(format t "run start ~%")
+	(rec (machine-expression m) (machine-environment m))))
 
 
 (defmethod to_s (x) (format nil "~A" x))
@@ -121,6 +133,8 @@
 			   (make-machine (make-assign 'x (make-add (make-var 'x) (make-num 2))) '((x . 1)))
 			   (make-machine (make-if (make-lt (make-num 1) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
 			   (make-machine (make-if (make-lt (make-num 3) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
+			   (make-machine (make-if (make-var 'x) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) '((x . (make-bool t))))
+			   (make-machine (make-seq (make-assign 'x (make-add (make-num 1) (make-num 1))) (make-assign 'y (make-add (make-var 'x) (make-num 3)))) nil)
 			   )))
   (mapcar #'run tests))
 
