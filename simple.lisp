@@ -50,10 +50,23 @@
 (defmethod myreduce ((x Svariable) env) (cdr (assoc (variable-name x) env)))
 
 
+(defun make-donothing () (make-instance 'Sdonothing))
 (defclass Sdonothing () (()))
 (defmethod to_s ((x Sdonothing)) "do-nothing")
 (defmethod reduciblep ((x Sdonothing)) nil)
 (defmethod myreduce ((x Sdonothing) env) x)
+(defmethod donothingp ((x Sdonothing)) t)
+(defmethod donothingp (x) nil)
+
+
+(defun make-assign (n e) (make-instance 'Sassign :name n :expression e))
+(defclass Sassign () ((name :accessor assign-name :initarg :name)
+					  (expression :accessor assign-expression :initarg :expression)))
+(defmethod to_s ((x Sassign)) (format nil "~A = ~A" (assign-name x) (to_s (assign-expression x))))
+(defmethod reduciblep ((x Sassign)) t)
+(defmethod myreduce ((x Sassign) env) (if (reduciblep (assign-expression x))
+										(make-assign (assign-name x) (myreduce (assign-expression x) env))
+										(cons (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
 
 
 (defun make-machine (expr env) (make-instance 'Machine :expression expr :environment env))
@@ -63,18 +76,26 @@
   (labels ((rec (step)
 				(myinspect step)
 				(when (reduciblep step)
-				  (rec (myreduce step (machine-environment m)))
+				  (let ((r (myreduce step (machine-environment m))))
+					  (rec r))
 				  )))
 	(format t "start ~%")
 	(rec (machine-expression m))))
 
 
+(defmethod to_s (x) (format nil "~A" x))
+(defmethod reduciblep (x) nil)
+(defmethod myreduce (x env) x)
+
 (defun myinspect (x) (format t "<< ~A >>~%" (to_s x)))
-(defun inspect_reduce(a)
+(defun inspect_reduce(a env)
   (format t "~A~%" (myinspect a))
-  (when (reduciblep a) (format t "~A~%" (myinspect (myreduce a nil)))))
-(inspect_reduce (make-add (make-num 9) (make-num 7)))
-(inspect_reduce (make-mul (make-num 2) (make-num 3)))
+  (when (reduciblep a) (format t "~A~%" (myinspect (myreduce a env)))))
+(inspect_reduce (make-add (make-num 9) (make-num 7)) nil)
+(inspect_reduce (make-mul (make-num 2) (make-num 3)) nil)
+(myinspect (make-assign 'x (make-add (make-var 'x) (make-num 1))))
+(let ((env '((x . 2))))
+  (myinspect (myreduce (myreduce (make-assign 'x (make-add (make-var 'x) (make-num 1))) env) env)))
 
 (let ((tests (list
 			   (make-machine (make-add (make-mul (make-num 1) (make-num 2)) (make-mul (make-num 3) (make-num 4))) nil)
@@ -82,6 +103,8 @@
 			   (make-machine (make-lt (make-add (make-num 2) (make-num 3)) (make-num 5)) nil)
 			   (make-machine (make-var 'x) (list (cons 'x (make-num 8))))
 			   (make-machine (make-add (make-var 'x) (make-var 'y)) (list (cons 'x (make-num 8)) (cons 'y (make-num 9))))
+			   (make-machine (make-assign 'x (make-var 'x) ) '((x . 1)))
+			   (make-machine (make-assign 'x (make-add (make-var 'x) (make-num 2))) '((x . 1)))
 			   )))
   (mapcar #'run tests))
 
