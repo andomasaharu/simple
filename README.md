@@ -22,11 +22,13 @@ multipler
 boolean  
 lessthan  
 variable (and environment)  
+statement (assign)
 
 executable example:  
 1 * 2 + 3 * 4  
 1 + 2 < 6  
 x + y  
+x = x + 1  
 
 about simple:  
 Simple IMPerative LanguagE  
