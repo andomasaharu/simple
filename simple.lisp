@@ -69,6 +69,19 @@
 										(cons (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
 
 
+(defun make-if (cnd cns alt) (make-instance 'Sif :condition cnd :consequence cns :alternative alt))
+(defclass Sif () ((condition :accessor if-condition :initarg :condition)
+				  (consequence :accessor if-consequence :initarg :consequence)
+				  (alternative :accessor if-alternative :initarg :alternative)))
+(defmethod to_s ((x Sif)) (format nil "if ~A then ~A else ~A" (to_s (if-condition x)) (to_s (if-consequence x)) (to_s (if-alternative x))))
+(defmethod reduciblep ((x Sif)) t)
+(defmethod myreduce ((x Sif) env) (if (reduciblep (if-condition x))
+									(make-if (myreduce (if-condition x) env) (if-consequence x) (if-alternative x))
+									(if (if-condition x)
+									  (myreduce (if-consequence x) env)
+									  (myreduce (if-alternative x) env))))
+
+
 (defun make-machine (expr env) (make-instance 'Machine :expression expr :environment env))
 (defclass Machine () ((expression :accessor machine-expression :initarg :expression)
 					  (environment :accessor machine-environment :initarg :environment)))
@@ -91,6 +104,7 @@
 (defun inspect_reduce(a env)
   (format t "~A~%" (myinspect a))
   (when (reduciblep a) (format t "~A~%" (myinspect (myreduce a env)))))
+(inspect_reduce (make-if (make-lt (make-num 1) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
 (inspect_reduce (make-add (make-num 9) (make-num 7)) nil)
 (inspect_reduce (make-mul (make-num 2) (make-num 3)) nil)
 (myinspect (make-assign 'x (make-add (make-var 'x) (make-num 1))))
@@ -105,6 +119,8 @@
 			   (make-machine (make-add (make-var 'x) (make-var 'y)) (list (cons 'x (make-num 8)) (cons 'y (make-num 9))))
 			   (make-machine (make-assign 'x (make-var 'x) ) '((x . 1)))
 			   (make-machine (make-assign 'x (make-add (make-var 'x) (make-num 2))) '((x . 1)))
+			   (make-machine (make-if (make-lt (make-num 1) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
+			   (make-machine (make-if (make-lt (make-num 3) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
 			   )))
   (mapcar #'run tests))
 
