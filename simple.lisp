@@ -9,6 +9,7 @@
   (defmethod reduciblep (x) nil)
   (defmethod myreduce (x env) x)
 
+
   (defun make-num (a) (make-instance 'Snumber :value a))
   (defclass Snumber () ((value :accessor number-value :initarg :value)))
   (defmethod to_s ((x Snumber)) (format nil "~A" (number-value x)))
