@@ -26,6 +26,7 @@ variable (and environment)
 statement (assign)
 if then else
 sequence
+while
 
 executable example:  
 1 * 2 + 3 * 4  
@@ -34,6 +35,7 @@ x + y
 x = x + 1  
 if 1 < 1 then y = 1 else y = 2
 x = 1 + 1; y = x + 2
+while x < 5 then x = x * 3
 
 about simple:  
 Simple IMPerative LanguagE  

@@ -77,7 +77,7 @@
 (defmethod reduciblep ((x Sif)) t)
 (defmethod myreduce ((x Sif) env) (if (reduciblep (if-condition x))
 									(make-if (myreduce (if-condition x) env) (if-consequence x) (if-alternative x))
-									(if (if-condition x)
+									(if (myreduce (if-condition x) env)
 									  (myreduce (if-consequence x) env)
 									  (myreduce (if-alternative x) env))))
 
@@ -93,12 +93,20 @@
 											(values (make-seq rf (sequence-snd x)) re))))
 
 
+(defun make-while (c b) (make-instance 'Swhile :condition c :body b))
+(defclass Swhile () ((condition :accessor while-condition :initarg :condition)
+					 (body :accessor while-body :initarg :body)))
+(defmethod to_s ((x Swhile)) (format nil "while;"))
+(defmethod reduciblep ((x Swhile)) t)
+(defmethod myreduce ((x Swhile) env) (values (make-if (while-condition x) (make-seq (while-body x) x) (make-donothing)) env))
+
+
 (defun make-machine (expr env) (make-instance 'Machine :expression expr :environment env))
 (defclass Machine () ((expression :accessor machine-expression :initarg :expression)
 					  (environment :accessor machine-environment :initarg :environment)))
 (defmethod run ((m Machine))
   (labels ((rec (step env)
-				(myinspect step)
+				(myinspect step env)
 				(when (reduciblep step)
 				  (multiple-value-bind (r renv) (myreduce step env)
 					(if renv
@@ -112,16 +120,17 @@
 (defmethod reduciblep (x) nil)
 (defmethod myreduce (x env) x)
 
-(defun myinspect (x) (format t "<< ~A >>~%" (to_s x)))
+(defun myinspect (x env) (format t "<< ~A >> ~A~%" (to_s x) env))
 (defun inspect_reduce(a env)
-  (format t "~A~%" (myinspect a))
-  (when (reduciblep a) (format t "~A~%" (myinspect (myreduce a env)))))
+  (format t "~A~%" (myinspect a env))
+  (when (reduciblep a) (format t "~A~%" (myinspect (myreduce a env) env))))
+(inspect_reduce (make-while (make-lt (make-var 'x) (make-num 5)) (make-assign 'x (make-mul (make-var 'x) (make-num 3)))) '((x . 1)))
 (inspect_reduce (make-if (make-lt (make-num 1) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
 (inspect_reduce (make-add (make-num 9) (make-num 7)) nil)
 (inspect_reduce (make-mul (make-num 2) (make-num 3)) nil)
-(myinspect (make-assign 'x (make-add (make-var 'x) (make-num 1))))
+(myinspect (make-assign 'x (make-add (make-var 'x) (make-num 1))) nil)
 (let ((env '((x . 2))))
-  (myinspect (myreduce (myreduce (make-assign 'x (make-add (make-var 'x) (make-num 1))) env) env)))
+  (myinspect (myreduce (myreduce (make-assign 'x (make-add (make-var 'x) (make-num 1))) env) env) env))
 
 (let ((tests (list
 			   (make-machine (make-add (make-mul (make-num 1) (make-num 2)) (make-mul (make-num 3) (make-num 4))) nil)
@@ -135,6 +144,7 @@
 			   (make-machine (make-if (make-lt (make-num 3) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) nil)
 			   (make-machine (make-if (make-var 'x) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2))) '((x . (make-bool t))))
 			   (make-machine (make-seq (make-assign 'x (make-add (make-num 1) (make-num 1))) (make-assign 'y (make-add (make-var 'x) (make-num 3)))) nil)
+			   (make-machine (make-while (make-lt (make-var 'x) (make-num 5)) (make-assign 'x (make-mul (make-var 'x) (make-num 3)))) '((x . 1)))
 			   )))
   (mapcar #'run tests))
 
