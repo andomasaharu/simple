@@ -15,6 +15,7 @@
   (defmethod to_s ((x Snumber)) (format nil "~A" (number-value x)))
   (defmethod reduciblep ((x Snumber)) nil)
   (defmethod myreduce ((x Snumber) env) (number-value x))
+  (defmethod evaluate ((x Snumber) env) (number-value x))
 
 
   (defun make-add (l r) (make-instance 'Sadd :left l :right r))
@@ -25,6 +26,7 @@
   (defmethod myreduce ((x Sadd) env) (cond ((reduciblep (add-left x)) (make-add (myreduce (add-left x) env) (add-right x)))
 										   ((reduciblep (add-right x)) (make-add (add-left x) (myreduce (add-right x) env)))
 										   (t (make-num (+ (myreduce (add-left x) env) (myreduce (add-right x) env))))))
+  (defmethod evaluate ((x Sadd) env) (make-num (+ (evaluate (add-left x) env) (evaluate (add-right x) env))))
 
 
   (defun make-mul (l r) (make-instance 'Smultiply :left l :right r))
@@ -35,6 +37,7 @@
   (defmethod myreduce ((x Smultiply) env) (cond ((reduciblep (multiply-left x)) (make-mul (myreduce (multiply-left x) env) (multiply-right x)))
 												((reduciblep (multiply-right x)) (make-mul (multiply-left x) (myreduce (multiply-right x) env)))
 												(t (make-num (* (myreduce (multiply-left x) env) (myreduce (multiply-right x) env))))))
+  (defmethod evaluate ((x Smultiply) env) (make-num (* (evaluate (multiply-left x) env) (evaluate (multiply-right x) env))))
 
 
   (defun make-bool (a) (make-instance 'Sboolean :value a))
@@ -42,6 +45,7 @@
   (defmethod to_s ((x Sboolean)) (if (boolean-value x) "true" "false"))
   (defmethod reduciblep ((x Sboolean)) nil)
   (defmethod myreduce ((x Sboolean) env) (boolean-value x))
+  (defmethod evaluate ((x Sboolean) env) (boolean-value x))
 
 
   (defun make-lt (l r) (make-instance 'Slessthan :left l :right r))
@@ -52,6 +56,7 @@
   (defmethod myreduce ((x Slessthan) env) (cond ((reduciblep (lessthan-left x)) (make-lt (myreduce (lessthan-left x) env) (lessthan-right x)))
 												((reduciblep (lessthan-right x)) (make-lt (lessthan-left x) (myreduce (lessthan-right x) env)))
 												(t (make-bool (< (myreduce (lessthan-left x) env) (myreduce (lessthan-right x) env))))))
+  (defmethod evaluate ((x Slessthan) env) (make-bool (< (evaluate (lessthan-left x) env) (evaluate (lessthan-right x) env))))
 
 
   (defun make-var (a) (make-instance 'Svariable :aname a))
@@ -59,6 +64,7 @@
   (defmethod to_s ((x Svariable)) (format nil "~A" (variable-name x)))
   (defmethod reduciblep ((x Svariable)) t)
   (defmethod myreduce ((x Svariable) env) (cdr (assoc (variable-name x) env)))
+  (defmethod evaluate ((x Svariable) env) (cdr (assoc (variable-name x) env)))
 
 
   (defun make-donothing () (make-instance 'Sdonothing))
@@ -66,6 +72,7 @@
   (defmethod to_s ((x Sdonothing)) "do-nothing")
   (defmethod reduciblep ((x Sdonothing)) nil)
   (defmethod myreduce ((x Sdonothing) env) x)
+  (defmethod evaluate ((x Sdonothing) env) env)
   (defmethod donothingp ((x Sdonothing)) t)
   (defmethod donothingp (x) nil)
 
@@ -78,6 +85,7 @@
   (defmethod myreduce ((x Sassign) env) (if (reduciblep (assign-expression x))
 										  (make-assign (assign-name x) (myreduce (assign-expression x) env))
 										  (values (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
+  (defmethod evaluate ((x Sassign) env) (cons (cons (assign-name x) (assign-expression x)) env))
 
 
   (defun make-if (cnd cns alt) (make-instance 'Sif :condition cnd :consequence cns :alternative alt))
@@ -138,6 +146,20 @@
 	)
   ;(test_inspect_reduce)
 
+  (defun test_run_bigstep ()
+	(let ((env '((x . 3)))
+		  (tests (list
+				   (make-num 8)
+				   (make-bool t)
+				   (make-var 'x)
+				   (make-add (make-num 3) (make-num 4))
+				   (make-mul (make-num 5) (make-num 6))
+				   (make-lt (make-num 2) (make-num 3))
+				   (make-lt (make-num 3) (make-num 2))
+				   (make-assign 'x (make-num 4))
+				   )))
+	  (mapcar (lambda (x) (format t "~A~%" (to_s (evaluate x env)))) testS)))
+  (test_run_bigstep)
   (defun test_run ()
 	(let ((tests (list
 				   (make-machine (make-add (make-mul (make-num 1) (make-num 2)) (make-mul (make-num 3) (make-num 4))) nil)

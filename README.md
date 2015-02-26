@@ -1,4 +1,5 @@
 simple is small-step semantics research project  
+and large-step semantics
 on Common Lisp  
 debug or check on [CLISP](http://www.clisp.org/)  
 for studying computer programming semantics  
@@ -27,6 +28,7 @@ statement (assign)
 if then else
 sequence
 while
+evaluate (possible large-step)  
 
 executable example:  
 1 * 2 + 3 * 4  
