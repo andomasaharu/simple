@@ -85,7 +85,7 @@
   (defmethod myreduce ((x Sassign) env) (if (reduciblep (assign-expression x))
 										  (make-assign (assign-name x) (myreduce (assign-expression x) env))
 										  (values (make-donothing) (cons (cons (assign-name x) (assign-expression x)) env))))
-  (defmethod evaluate ((x Sassign) env) (cons (cons (assign-name x) (assign-expression x)) env))
+  (defmethod evaluate ((x Sassign) env) (cons (cons (assign-name x) (evaluate (assign-expression x) env)) env))
 
 
   (defun make-if (cnd cns alt) (make-instance 'Sif :condition cnd :consequence cns :alternative alt))
@@ -99,6 +99,11 @@
 									  (if (myreduce (if-condition x) env)
 										(myreduce (if-consequence x) env)
 										(myreduce (if-alternative x) env))))
+  (defmethod evaluate ((x Sif) env) (if (evaluate-if (evaluate (if-condition x) env) env)
+									  (evaluate (if-consequence x) env)
+									  (evaluate (if-alternative x) env)))
+  (defmethod evaluate-if ((x Sboolean) env) (boolean-value x))
+  (defmethod evaluate-if (x env) (evaluate x env))
 
 
   (defun make-seq (f s) (make-instance 'Ssequence :fst f :snd s))
@@ -110,6 +115,7 @@
 											(values (sequence-snd x) env)
 											(multiple-value-bind (rf re) (myreduce (sequence-fst x) env)
 											  (values (make-seq rf (sequence-snd x)) re))))
+  (defmethod evaluate ((x Ssequence) env) (evaluate (sequence-snd x) (evaluate (sequence-fst x) env)))
 
 
   (defun make-while (c b) (make-instance 'Swhile :condition c :body b))
@@ -118,6 +124,9 @@
   (defmethod to_s ((x Swhile)) (format nil "while;"))
   (defmethod reduciblep ((x Swhile)) t)
   (defmethod myreduce ((x Swhile) env) (values (make-if (while-condition x) (make-seq (while-body x) x) (make-donothing)) env))
+  (defmethod evaluate ((x Swhile) env) (if (evaluate-if (evaluate (while-condition x) env) env)
+										 (evaluate (while-body x) env)
+										 env))
 
 
   (defun make-machine (expr env) (make-instance 'Machine :expression expr :environment env))
@@ -157,6 +166,11 @@
 				   (make-lt (make-num 2) (make-num 3))
 				   (make-lt (make-num 3) (make-num 2))
 				   (make-assign 'x (make-num 4))
+				   (make-assign 'x (make-add (make-num 3) (make-num 5)))
+				   (make-if (make-lt (make-num 1) (make-num 2)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2)))
+				   (make-if (make-lt (make-num 2) (make-num 1)) (make-assign 'y (make-num 1)) (make-assign 'y (make-num 2)))
+				   (make-seq (make-assign 'x (make-add (make-num 1) (make-num 2))) (make-assign 'y (make-add (make-num 4) (make-num 3))))
+				   (make-while (make-lt (make-var 'x) (make-num 5)) (make-assign 'x (make-mul (make-var 'x) (make-num 3))))
 				   )))
 	  (mapcar (lambda (x) (format t "~A~%" (to_s (evaluate x env)))) testS)))
   (test_run_bigstep)
