@@ -28,6 +28,16 @@
   (defmethod read-string ((x DFA) s) (map 'list (lambda (c) (read-character x c)) s))
 
 
+  (defun make-dfad (s a r) (make-instance 'DFAdesign :start-state s :accept-states a :rulebook r))
+  (defclass DFAdesign () ((start-state :accessor dfad-start-state :initarg :start-state)
+						  (accept-states :accessor dfad-accept-states :initarg :accept-states)
+						  (rulebook :accessor dfad-rulebook :initarg :rulebook)))
+  (defmethod to_dfa ((x DFAdesign)) (make-dfa (dfad-start-state x) (dfad-accept-states x) (dfad-rulebook x)))
+  (defmethod acceptsp ((x DFAdesign) s) (let ((dfa (to_dfa x)))
+										  (read-string dfa s)
+										  (acceptingp dfa)))
+
+
   (let* ((rulebook (make-rulebook (list (make-rule 1 #\a 2)
 									   (make-rule 1 #\b 1)
 									   (make-rule 2 #\a 2)
@@ -36,6 +46,7 @@
 									   (make-rule 3 #\b 3))))
 		(inputs '((1 . #\a) (1 . #\b) (2 . #\b)))
 		(dfa (make-dfa 1 '(3) rulebook))
+		(dfad (make-dfad 1 '(3) rulebook))
 		)
 	(format t "~A~%" (acceptingp (make-dfa 1 '(1 3) rulebook)))
 	(format t "~A~%" (acceptingp (make-dfa 1 '(3) rulebook)))
@@ -50,5 +61,8 @@
 	(format t "~A~%" (acceptingp dfa))
 	(read-string dfa "baaab")
 	(format t "~A~%" (acceptingp dfa))
+	(format t "~A~%" (acceptsp dfad "a"))
+	(format t "~A~%" (acceptsp dfad "baa"))
+	(format t "~A~%" (acceptsp dfad "baba"))
 	)
   )
