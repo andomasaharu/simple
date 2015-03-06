@@ -1,3 +1,4 @@
+about simple.lisp  
 simple is small-step semantics research project  
 and large-step semantics
 on Common Lisp  
@@ -17,7 +18,7 @@ finally ecology for earth
 save the human(specially programmer)  
 oh, yeah Common Lisp  
 
-impliments are:  
+impliments :  
 integer number  
 adder  
 multipler  
@@ -38,6 +39,17 @@ x = x + 1
 if 1 < 1 then y = 1 else y = 2
 x = 1 + 1; y = x + 2
 while x < 5 then x = x * 3
+
+about dfa.lisp
+dfa is a Deterministic Finite Automaton  
+emulate at finite state machine  
+it is simple, small, easy to understand, easy to implementation  
+as pc without large ram, hdd, io, multi processor, 
+also on Common Lisp  
+
+impliments :  
+accept 1 character  
+accept string  
 
 about simple:  
 Simple IMPerative LanguagE  

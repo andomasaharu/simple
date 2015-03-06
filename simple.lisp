@@ -1,4 +1,3 @@
-
 (let ((abcdefg nil))
   (defun print-assoc (asc) (mapcar (lambda(x) (format nil "(~A . ~A)" (car x) (to_s (cdr x)))) asc))
   (defun myinspect (x env) (format t "<< ~A >> ~A~%" (to_s x) (print-assoc env)))
@@ -193,4 +192,3 @@
 	)
   ;(test_run)
   )
-
