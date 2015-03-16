@@ -42,15 +42,21 @@
   (defmethod next-states ((x NFArulebook) states chr) (reduce (lambda (acc x) (nconc x acc)) (mapcar (lambda (state) (follow-rules-for x state chr)) states) :initial-value nil))
   (defmethod follow-rules-for ((x NFArulebook) state chr) (mapcar #'follow (rules-for x state chr)))
   (defmethod rules-for ((x NFArulebook) state chr) (remove-if-not (lambda (rule) (applies-top rule state chr)) (rulebook-rules x) ))
+  (defmethod follow-free-moves ((x NFArulebook) states) (let ((more-states (next-states x states nil)))
+														  (if (reduce (lambda(acc x) (and (find x states) acc)) more-states :initial-value t)
+															states
+															(follow-free-moves x (append more-states states)))))
 
 
   (defun make-nfa (c a r) (make-instance 'NFA :current-states c :accept-states a :rulebook r))
-  (defclass NFA () ((current-states :accessor nfa-current-states :initarg :current-states)
+  (defclass NFA () ((current-states :accessor nfa-current-states0 :initarg :current-states)
 					(accept-states :accessor nfa-accept-states :initarg :accept-states)
 					(rulebook :accessor nfa-rulebook :initarg :rulebook)))
   (defmethod acceptingp ((x NFA)) (find-if (lambda (as) (find-if (lambda (cs) (eql cs as)) (nfa-current-states x))) (nfa-accept-states x)))
   (defmethod read-character ((x NFA) c) (setf (slot-value x 'current-states) (next-states (nfa-rulebook x) (nfa-current-states x) c)))
   (defmethod read-string ((x NFA) s) (map 'list (lambda (c) (read-character x c)) s))
+  ;(defmethod nfa-current-states ((x NFA)) (follow-free-moves (nfa-rulebook x) (nfa-current-states0 x)))
+  (defmethod nfa-current-states ((x NFA)) (nfa-current-states0 x))
 
 
   (defun make-nfad (s a r) (make-instance 'NFAdesign :start-state s :accept-states a :rulebook r))
@@ -64,7 +70,9 @@
 
 
   (defun nfatest ()
-	(let* ((rulebook (make-nfarulebook (list (make-rule 1 #\a 1)
+	(let* ((rulebook (make-nfarulebook (list (make-rule 1 nil 2)
+											 (make-rule 1 nil 4)
+											 (make-rule 1 #\a 1)
 											 (make-rule 1 #\b 1)
 											 (make-rule 1 #\b 2)
 											 (make-rule 2 #\a 3)
@@ -73,8 +81,9 @@
 											 (make-rule 3 #\b 4))))
 		   (nfa (make-nfa '(1) '(4) rulebook))
 		   (nfa0 (make-nfa '(1) '(4) rulebook))
-		   (nfad (make-nfad 1 '(4) rulebook))
+		   (nfad (make-nfad 1 '(2 4) rulebook))
 		   )
+	  (format t "~A~%" (next-states rulebook '(1) nil))
 	  (format t "~A~%" (next-states rulebook '(1) #\b))
 	  (format t "~A~%" (next-states rulebook '(1 2) #\a))
 	  (format t "~A~%" (next-states rulebook '(1 3) #\b))
@@ -93,6 +102,11 @@
 	  (format t "~A~%" (acceptsp nfad "bab"))
 	  (format t "~A~%" (acceptsp nfad "bbbbb"))
 	  (format t "~A~%" (acceptsp nfad "bbabb"))
+	  (format t "~A~%" (follow-free-moves rulebook '(1)))
+	  (format t "~A~%" (acceptsp nfad "aa"))
+	  (format t "~A~%" (acceptsp nfad "aaa"))
+	  (format t "~A~%" (acceptsp nfad "aaaaa"))
+	  (format t "~A~%" (acceptsp nfad "aaaaaa"))
 	  ))
   (nfatest)
   (defun dfatest ()
